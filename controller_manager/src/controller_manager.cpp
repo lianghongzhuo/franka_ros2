@@ -616,8 +616,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     resource_manager_->import_joint_limiters(robot_description_);
   }
+  // NOTE: Using deprecated API until migration to ResourceManagerParams; suppress deprecation warnings if needed.
   if (!resource_manager_->load_and_initialize_components(
-        robot_description, static_cast<unsigned int>(params_->update_rate)))
+    robot_description, static_cast<unsigned int>(params_->update_rate)))
   {
     RCLCPP_WARN(
       get_logger(),
@@ -1457,7 +1458,7 @@ controller_interface::return_type ControllerManager::switch_controller_cb(
       }
     }
     RCLCPP_DEBUG(
-      get_logger(), "'%s' request vector has size %i", action.c_str(), (int)request_list.size());
+      get_logger(), "'%s' request vector has size %i", action.c_str(), static_cast<int>(request_list.size()));
 
     return result;
   };
@@ -2429,9 +2430,9 @@ void ControllerManager::reload_controller_libraries_service_cb(
   {
     RCLCPP_ERROR(
       get_logger(),
-      "Controller manager: Cannot reload controller libraries because"
-      " there are still %i active controllers",
-      (int)active_controllers.size());
+  "Controller manager: Cannot reload controller libraries because"
+  " there are still %i active controllers",
+  static_cast<int>(active_controllers.size()));
     response->ok = false;
     return;
   }
@@ -2668,7 +2669,7 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
   periodicity_stats_.AddMeasurement(1.0 / period.seconds());
   auto [result, failed_hardware_names] = resource_manager_->read(time, period);
 
-  if (!result)
+  if (result != hardware_interface::return_type::OK)
   {
     rt_buffer_.deactivate_controllers_list.clear();
     // Determine controllers to stop
@@ -2938,7 +2939,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
 {
   auto [result, failed_hardware_names] = resource_manager_->write(time, period);
 
-  if (!result)
+  if (result != hardware_interface::return_type::OK)
   {
     rt_buffer_.deactivate_controllers_list.clear();
     // Determine controllers to stop
